@@ -1,5 +1,6 @@
 import os
 import subprocess as sp
+from pathlib import Path
 
 os.makedirs('./build', exist_ok = True)
 
@@ -9,8 +10,9 @@ cmd_config = [
     '-B', './build'
 ]
 # If on windows
-if (os.name == 'nt'): 
-    cmd_config += ['-DCMAKE_TOOLCHAIN_FILE=C:/Users/mkajo/Home/Raytracing/vcpkg/scripts/buildsystems/vcpkg.cmake']
+if (os.name == 'nt'):
+    vcpkg_path = Path.cwd().parent / 'vcpkg/scripts/buildsystems/vcpkg.cmake'
+    cmd_config += [f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_path.absolute()}']
 
 # Configure
 sp.run(cmd_config)
