@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add the executable as target
 add_executable(kea kea.cpp)
 
+# Dsiable validation layers if in release mode
+target_compile_definitions(kea PRIVATE $<$<CONFIG:RELEASE>:DISABLE_VALIDATION_LAYERS>)
+
 # Vulkan
 find_package(Vulkan REQUIRED)
 target_include_directories(kea PRIVATE ${Vulkan_INCLUDE_DIRS})
