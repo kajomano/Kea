@@ -16,11 +16,21 @@ target_include_directories(kea PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(kea PRIVATE ${Vulkan_LIBRARIES})
 
 # GLFW
-target_include_directories(kea PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../deps/glfw/include)
-target_link_libraries(kea PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../deps/glfw/lib-vc2022/glfw3.lib)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+target_include_directories(kea PRIVATE ${GLFW_INCLUDE_DIRS})
+target_link_libraries(kea PRIVATE ${GLFW_LIBRARIES})
 
 # GLM
-target_include_directories(kea PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../deps/glm)
+find_package(glm REQUIRED)
+target_include_directories(kea PRIVATE ${GLM_INCLUDE_DIRS})
+
+# GLFW
+# target_include_directories(kea PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../deps/glfw/include)
+# target_link_libraries(kea PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../deps/glfw/lib-vc2022/glfw3.lib)
+
+# GLM
+# target_include_directories(kea PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../deps/glm)
 
 
 # find_package(nlohmann_json 3.2.0 REQUIRED)
