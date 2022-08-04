@@ -10,16 +10,20 @@ public:
     void run();
 
 private:
-    GLFWwindow* m_window;
-    VkInstance  m_vk_instance;
-
-    // Helper functions
-    bool checkValidationLayerSupport();
-    std::vector<const char*> getRequiredExtensions();
-
     // Main functions (called by run)
     void initWindow();
     void initVulkan();
     void mainLoop();
     void cleanup();
+
+    // Helper functions
+    bool checkValidationLayerSupport();
+    std::vector<const char*> getRequiredExtensions();
+    void createVulkanInstance();
+    void setupDebugMessenger();
+    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create_info);
+
+    GLFWwindow* m_window;
+    VkInstance  m_vk_instance;
+    VkDebugUtilsMessengerEXT m_debug_messenger;
 };

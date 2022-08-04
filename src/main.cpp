@@ -12,5 +12,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    // Keep cmd open
+    std::getchar();
+
     return EXIT_SUCCESS;
 }
