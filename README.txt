@@ -4,7 +4,7 @@
 - VCPKG:
   - git clone https://github.com/Microsoft/vcpkg.git --config "http.proxy=http://10.144.1.10:8080"
   - .\vcpkg\bootstrap-vcpkg.bat
-  - .\vcpkg\vcpkg.exe --triplet x64-windows install glfw3 
+  - .\vcpkg\vcpkg.exe --triplet x64-windows install glfw3
   - .\vcpkg\vcpkg.exe --triplet x64-windows install glm
   NOTE: if it does not want to work, delet the build directory and try again
 

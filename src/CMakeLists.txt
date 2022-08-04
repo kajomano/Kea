@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add the executable as target
-add_executable(kea main.cpp)
+add_executable(kea kea.cpp)
 
 # Vulkan
 find_package(Vulkan REQUIRED)
