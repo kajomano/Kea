@@ -2,9 +2,17 @@ import os
 import subprocess as sp
 from pathlib import Path
 import argparse
+import shutil
 
 # Parse arguments
 parser = argparse.ArgumentParser(description = 'Build the Kea raytracer.')
+parser.add_argument(
+    '--clean',
+    action  = 'store_const',
+    const   = True, 
+    default = False,
+    help    = 'clean build'
+)
 parser.add_argument(
     '--release',
     action  = 'store_const',
@@ -12,8 +20,11 @@ parser.add_argument(
     default = False,
     help    = 'build in release mode'
 )
-
 args = parser.parse_args()
+
+# If clean build
+if args.clean:
+    shutil.rmtree('./build', ignore_errors = True)
 
 # Create build directory
 os.makedirs('./build', exist_ok = True)
