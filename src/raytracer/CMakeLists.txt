@@ -16,11 +16,11 @@ target_sources(raytracer
 # Expose the headers for whoever links against this lib
 target_include_directories(raytracer PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-# External dependencies
-# # Disable validation layers if in release mode
-# target_compile_definitions(kea PRIVATE $<$<CONFIG:RELEASE>:DISABLE_VALIDATION_LAYERS>)
+# Vulkan
+# Disable validation layers if in release mode
+target_compile_definitions(raytracer PRIVATE $<$<CONFIG:RELEASE>:DISABLE_VALIDATION_LAYERS>)
 
-# # Vulkan
-# find_package(Vulkan REQUIRED)
-# target_include_directories(kea PRIVATE ${Vulkan_INCLUDE_DIRS})
-# target_link_libraries(kea PRIVATE ${Vulkan_LIBRARIES})
+# Find package
+find_package(Vulkan REQUIRED)
+target_include_directories(raytracer PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(raytracer PRIVATE ${Vulkan_LIBRARIES})

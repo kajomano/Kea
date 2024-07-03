@@ -18,4 +18,4 @@
 	```
 
 - Vulkan
-	- Download installer from [here](https://vulkan.lunarg.com/)
+	- Download installer from [here](https://vulkan.lunarg.com/sdk/home)

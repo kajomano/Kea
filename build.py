@@ -40,22 +40,9 @@ cmd_build = [
     '--target', 'install'
 ]
 
-# # TODO: untested!
-# # If on linux
-# if (os.name == 'posix'):
-#     if args.release:
-#         cmd_config += ['-DCMAKE_BUILD_TYPE=Release']
-
-# # If on windows
-# elif (os.name == 'nt'):
-#     vcpkg_path = root.parent / 'vcpkg' / 'scripts' / 'buildsystems' / 'vcpkg.cmake'
-#     cmd_config += [f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_path.absolute()}']
-
-#     if args.release:
-#         cmd_build += ['--config', 'Release']
-
-# else:
-#     raise Exception('Unknown operating system!')
+# Release switch
+if args.release:
+	cmd_build += ['--config', 'Release']
 
 # Configure and build
 subprocess.run(cmd_config)
