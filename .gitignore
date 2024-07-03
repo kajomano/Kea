@@ -6,5 +6,6 @@ build/
 *out
 
 *.so
+*.pyd
 *.png
 *.gif

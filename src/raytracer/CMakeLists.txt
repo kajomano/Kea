@@ -13,6 +13,7 @@ target_sources(raytracer
     shader_test.cpp
 )
 
+# Expose the headers for whoever links against this lib
 target_include_directories(raytracer PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 # External dependencies
@@ -23,6 +24,3 @@ target_include_directories(raytracer PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 # find_package(Vulkan REQUIRED)
 # target_include_directories(kea PRIVATE ${Vulkan_INCLUDE_DIRS})
 # target_link_libraries(kea PRIVATE ${Vulkan_LIBRARIES})
-
-
-

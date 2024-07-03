@@ -18,17 +18,5 @@ message(STATUS ${CMAKE_BUILD_TYPE})
 add_subdirectory(bindings)
 add_subdirectory(raytracer)
 
-# TODO: Check if these work on windows
 # Compilation options
-# # Add warning flags (but remove some problematic ones)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -Wextra")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-clobbered")
-
-# # Limit max errors printed
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmax-errors=6")
-
-# # Release: Force optimization level
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-
-# # Debug: Remove optimization, add debug information
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -ggdb")
+add_compile_options(/W4)

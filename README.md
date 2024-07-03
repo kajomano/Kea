@@ -12,17 +12,9 @@
 - Visual Studio
 	- Download installer from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Release)
 
-- VCKPG
-	```
-	git clone https://github.com/Microsoft/vcpkg.git
-	cd vcpkg
-	./bootstrap-vcpkg.sh
-	./vcpkg integrate install
-	```
-
 - pybind11
 	```
-	./vcpkg install pybind11
+	python -m pip install pybind11[global]
 	```
 
 - Vulkan
