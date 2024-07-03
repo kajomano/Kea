@@ -1,27 +1,34 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.29)
 
 # Set the project name and version
 project(Kea VERSION 0.1)
 
 # Specify the C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Add the executable as target
-add_executable(kea main.cpp kea.cpp)
+# ON if you want to see the commands invoked
+set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_FIND_DEBUG_MODE 0)
 
-# Dsiable validation layers if in release mode
-target_compile_definitions(kea PRIVATE $<$<CONFIG:RELEASE>:DISABLE_VALIDATION_LAYERS>)
+# Print build type debug/release
+message(STATUS ${CMAKE_BUILD_TYPE})
 
-# Vulkan
-find_package(Vulkan REQUIRED)
-target_include_directories(kea PRIVATE ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(kea PRIVATE ${Vulkan_LIBRARIES})
+# Add subdirectories
+add_subdirectory(bindings)
+add_subdirectory(raytracer)
 
-# GLFW
-find_package(glfw3 REQUIRED)
-target_link_libraries(kea PRIVATE glfw)
+# TODO: Check if these work on windows
+# Compilation options
+# # Add warning flags (but remove some problematic ones)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -Wextra")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-clobbered")
 
-# # GLM
-# find_package(glm CONFIG REQUIRED)
-# target_link_libraries(main PRIVATE glm::glm)
+# # Limit max errors printed
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmax-errors=6")
+
+# # Release: Force optimization level
+# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
+# # Debug: Remove optimization, add debug information
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -ggdb")
