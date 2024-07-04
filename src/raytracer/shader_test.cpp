@@ -25,18 +25,12 @@ const std::vector<const char*> VALIDATION_LAYERS = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-// struct QueueFamilyIndices {
-//     std::optional<uint32_t> graphicsFamily;
-
-//     bool isComplete() {
-//         return graphicsFamily.has_value();
-//     }
-// };
-
 class RayTracer {
 	vk::raii::Context context;
 	vk::raii::Instance instance;
 	vk::raii::DebugUtilsMessengerEXT debug_messenger;
+	vk::raii::PhysicalDevice physical_device;
+	vk::raii::Device logical_device;
 
 	vk::raii::Instance createInstance() {
         if(ENABLE_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
@@ -130,141 +124,50 @@ class RayTracer {
         return extensions;
     }
 
+	vk::raii::Device createLogicalDevice() {
+		// Find a queue that supports compute
+		std::vector<vk::QueueFamilyProperties> qf_properties = physical_device.getQueueFamilyProperties();
+		auto prop_it = std::find_if(qf_properties.begin(), qf_properties.end(), 
+			[](const vk::QueueFamilyProperties& properties) {
+				return properties.queueFlags & vk::QueueFlagBits::eCompute;
+			}
+		);
+		if (prop_it == qf_properties.end()) {
+			throw std::runtime_error("Couldn't find queue family that supports compute!");
+		}
+
+		float q_prio = 1.0f;
+		vk::DeviceQueueCreateInfo dq_info{
+			.queueFamilyIndex = static_cast<uint32_t>(std::distance(qf_properties.begin(), prop_it)),
+			.queueCount = 1,
+			.pQueuePriorities = &q_prio
+		};
+
+		vk::DeviceCreateInfo device_info{
+			.queueCreateInfoCount = 1,
+			.pQueueCreateInfos = &dq_info
+		};
+
+		if(ENABLE_VALIDATION_LAYERS) {
+			device_info.setEnabledLayerCount(static_cast<uint32_t>(VALIDATION_LAYERS.size()));
+			device_info.setPEnabledLayerNames(VALIDATION_LAYERS);
+		}
+
+		return physical_device.createDevice(device_info);
+    }
+
 public:
 	RayTracer()
 		: context{}
 		, instance{createInstance()}
 		, debug_messenger{vk::raii::DebugUtilsMessengerEXT(instance, createDebugMessengerInfo())}
+		, physical_device{instance.enumeratePhysicalDevices().front()}
+		, logical_device{createLogicalDevice()}
 	{};
 
     void run() {
 
     }
-
-private:
-    // VkInstance instance;
-	// VkDebugUtilsMessengerEXT debugMessenger;
-	// VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-	// VkDevice device;
-    // VkQueue graphicsQueue;
-
-    void initVulkan() {
-        createInstance();
-		// setupDebugMessenger();
-		// pickPhysicalDevice();
-		// createLogicalDevice();
-    }
-
-    // void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
-    //     createInfo = {};
-    //     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    //     createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    //     createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    //     createInfo.pfnUserCallback = debugCallback;
-    // }
-
-    // void setupDebugMessenger() {
-    //     if (!enableValidationLayers) return;
-
-    //     VkDebugUtilsMessengerCreateInfoEXT createInfo;
-    //     populateDebugMessengerCreateInfo(createInfo);
-
-    //     if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-    //         throw std::runtime_error("Failed to set up debug messenger!");
-    //     }
-    // }
-
-	// void pickPhysicalDevice() {
-    //     uint32_t deviceCount = 0;
-    //     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-
-    //     if (deviceCount == 0) {
-    //         throw std::runtime_error("Failed to find GPUs with Vulkan support!");
-    //     }
-
-    //     std::vector<VkPhysicalDevice> devices(deviceCount);
-    //     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-    //     for (const auto& device : devices) {
-    //         if (isDeviceSuitable(device)) {
-    //             physicalDevice = device;
-    //             break;
-    //         }
-    //     }
-
-    //     if (physicalDevice == VK_NULL_HANDLE) {
-    //         throw std::runtime_error("Failed to find a suitable GPU!");
-    //     }
-    // }
-
-   	// void createLogicalDevice() {
-    //     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
-    //     VkDeviceQueueCreateInfo queueCreateInfo{};
-    //     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    //     queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-    //     queueCreateInfo.queueCount = 1;
-
-    //     float queuePriority = 1.0f;
-    //     queueCreateInfo.pQueuePriorities = &queuePriority;
-
-    //     VkPhysicalDeviceFeatures deviceFeatures{};
-
-    //     VkDeviceCreateInfo createInfo{};
-    //     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-    //     createInfo.pQueueCreateInfos = &queueCreateInfo;
-    //     createInfo.queueCreateInfoCount = 1;
-
-    //     createInfo.pEnabledFeatures = &deviceFeatures;
-
-    //     createInfo.enabledExtensionCount = 0;
-
-    //     if (enableValidationLayers) {
-    //         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-    //         createInfo.ppEnabledLayerNames = validationLayers.data();
-    //     } else {
-    //         createInfo.enabledLayerCount = 0;
-    //     }
-
-    //     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
-    //         throw std::runtime_error("failed to create logical device!");
-    //     }
-
-    //     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
-    // }
-
-    // bool isDeviceSuitable(VkPhysicalDevice device) {
-    //     QueueFamilyIndices indices = findQueueFamilies(device);
-
-    //     return indices.isComplete();
-    // }
-
-    // QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
-    //     QueueFamilyIndices indices;
-
-    //     uint32_t queueFamilyCount = 0;
-    //     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-    //     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    //     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-    //     int i = 0;
-    //     for (const auto& queueFamily : queueFamilies) {
-    //         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-    //             indices.graphicsFamily = i;
-    //         }
-
-    //         if (indices.isComplete()) {
-    //             break;
-    //         }
-
-    //         i++;
-    //     }
-
-    //     return indices;
-    // }
-
 };
 
 int shaderTest() {
