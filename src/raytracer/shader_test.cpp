@@ -5,7 +5,9 @@
 #include <cstdlib>
 #include <optional>
 
+#define VULKAN_HPP_NO_CONSTRUCTORS // For designated initializers
 #include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "shader_test.h"
 
@@ -13,31 +15,15 @@
 // https://github.com/KhronosGroup/Vulkan-Hpp
 // https://gist.github.com/PolarNick239/d4e8cf6645ccb84804afe8d864be3f22
 
-// const std::vector<const char*> validationLayers = {
-//     "VK_LAYER_KHRONOS_validation"
-// };
+#ifdef DISABLE_VALIDATION_LAYERS
+	const bool ENABLE_VALIDATION_LAYERS = false;
+#else
+	const bool ENABLE_VALIDATION_LAYERS = true;
+#endif
 
-// #ifdef DISABLE_VALIDATION_LAYERS
-// 	const bool enableValidationLayers = false;
-// #else
-// 	const bool enableValidationLayers = true;
-// #endif
-
-// VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-//     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-//     if (func != nullptr) {
-//         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-//     } else {
-//         return VK_ERROR_EXTENSION_NOT_PRESENT;
-//     }
-// }
-
-// void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
-//     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-//     if (func != nullptr) {
-//         func(instance, debugMessenger, pAllocator);
-//     }
-// }
+const std::vector<const char*> VALIDATION_LAYERS = {
+    "VK_LAYER_KHRONOS_validation"
+};
 
 // struct QueueFamilyIndices {
 //     std::optional<uint32_t> graphicsFamily;
@@ -47,16 +33,116 @@
 //     }
 // };
 
-class HelloTriangleApplication {
+class RayTracer {
+	vk::raii::Context context;
+	vk::raii::Instance instance;
+	vk::raii::DebugUtilsMessengerEXT debug_messenger;
+
+	vk::raii::Instance createInstance() {
+        if(ENABLE_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
+            throw std::runtime_error("Validation layers requested, but not available!");
+        }
+
+		vk::ApplicationInfo app_info{
+			.pApplicationName 	= "Kea",
+			.applicationVersion = 1,
+			.pEngineName        = "Stargazer",
+			.engineVersion      = 1,
+			.apiVersion         = vk::ApiVersion10
+		};
+
+		auto extensions = getRequiredExtensions();
+
+		vk::InstanceCreateInfo instance_info{
+			.pApplicationInfo = &app_info,
+
+			// Extensions
+			.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+			.ppEnabledExtensionNames = extensions.data()
+		};
+
+		// Validation layers
+		if (ENABLE_VALIDATION_LAYERS) {
+			instance_info.setEnabledLayerCount(static_cast<uint32_t>(VALIDATION_LAYERS.size()));
+			instance_info.setPEnabledLayerNames(VALIDATION_LAYERS);
+
+			// Add debug messenger info for debug prints during instance creation
+			auto debug_messenger_info = createDebugMessengerInfo();
+			instance_info.pNext = &debug_messenger_info;
+		}
+
+		return vk::raii::Instance(context, instance_info);
+    }
+
+	// Create a debug messenger config, which is used in 2 places:
+	// 1) To create the debug messenger
+	// 2) To pass to instance info so there are debug messages during instance creation too
+	vk::DebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo() {
+		typedef vk::DebugUtilsMessageSeverityFlagBitsEXT severity;
+		typedef vk::DebugUtilsMessageTypeFlagBitsEXT type;
+
+		return vk::DebugUtilsMessengerCreateInfoEXT{
+			.messageSeverity	= severity::eWarning | severity::eError,
+			.messageType		= type::eGeneral | type::ePerformance |	type::eValidation,
+			.pfnUserCallback	= &debugCallback
+		};
+	}
+
+	// Callback function to print debug messages
+	// NOTE: C-style because I think the signature has to be correct
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
+		VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
+		void* pUserData
+	) {
+        std::cerr << "Vulkan validation layer: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE;
+    }
+
+	// Check if the validation layers listed in VALIDATION_LAYERS are supported
+	bool checkValidationLayerSupport() {
+        std::vector<vk::LayerProperties> available_layers = vk::enumerateInstanceLayerProperties();
+
+        for(const char* layer_name : VALIDATION_LAYERS) {
+            bool layer_found = false;
+
+            for(const auto &layer_properties : available_layers) {
+                if(strcmp(layer_name, layer_properties.layerName) == 0) {
+                    layer_found = true;
+                    break;
+                }
+            }
+
+            if (!layer_found) return false;
+        }
+
+        return true;
+    }
+
+	std::vector<const char*> getRequiredExtensions() {
+        std::vector<const char*> extensions;
+
+        if (ENABLE_VALIDATION_LAYERS) {
+            extensions.push_back(vk::EXTDebugUtilsExtensionName);
+        }
+
+        return extensions;
+    }
+
 public:
+	RayTracer()
+		: context{}
+		, instance{createInstance()}
+		, debug_messenger{vk::raii::DebugUtilsMessengerEXT(instance, createDebugMessengerInfo())}
+	{};
+
     void run() {
-        initVulkan();
-        draw();
-        cleanup();
+
     }
 
 private:
-    VkInstance instance;
+    // VkInstance instance;
 	// VkDebugUtilsMessengerEXT debugMessenger;
 	// VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	// VkDevice device;
@@ -67,59 +153,6 @@ private:
 		// setupDebugMessenger();
 		// pickPhysicalDevice();
 		// createLogicalDevice();
-    }
-
-    void draw() {
-
-    }
-
-    void cleanup() {
-		// vkDestroyDevice(device, nullptr);
-
-		// if (enableValidationLayers) {
-        //     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-        // }
-
-        vkDestroyInstance(instance, nullptr);
-    }
-
-    void createInstance() {
-        // if (enableValidationLayers && !checkValidationLayerSupport()) {
-        //     throw std::runtime_error("Validation layers requested, but not available!");
-        // }
-
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Hello Triangle";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
-
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-
-        // auto extensions = getRequiredExtensions();
-        // createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-        // createInfo.ppEnabledExtensionNames = extensions.data();
-
-        // VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-        // if (enableValidationLayers) {
-        //     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        //     createInfo.ppEnabledLayerNames = validationLayers.data();
-
-        //     populateDebugMessengerCreateInfo(debugCreateInfo);
-        //     createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
-        // } else {
-        //     createInfo.enabledLayerCount = 0;
-
-        //     createInfo.pNext = nullptr;
-        // }
-
-        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create instance!");
-        }
     }
 
     // void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
@@ -232,48 +265,10 @@ private:
     //     return indices;
     // }
 
-    // std::vector<const char*> getRequiredExtensions() {
-    //     std::vector<const char*> extensions;
-
-    //     if (enableValidationLayers) {
-    //         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-    //     }
-
-    //     return extensions;
-    // }
-
-    // bool checkValidationLayerSupport() {
-    //     uint32_t layerCount;
-    //     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-    //     std::vector<VkLayerProperties> availableLayers(layerCount);
-    //     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-    //     for (const char* layerName : validationLayers) {
-    //         bool layerFound = false;
-
-    //         for (const auto& layerProperties : availableLayers) {
-    //             if (strcmp(layerName, layerProperties.layerName) == 0) {
-    //                 layerFound = true;
-    //                 break;
-    //             }
-    //         }
-
-    //         if (!layerFound) return false;
-    //     }
-
-    //     return true;
-    // }
-
-    // static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-    //     std::cerr << "Vulkan validation layer: " << pCallbackData->pMessage << std::endl;
-
-    //     return VK_FALSE;
-    // }
 };
 
 int shaderTest() {
-	HelloTriangleApplication app;
+	RayTracer app;
 
     try {
         app.run();
