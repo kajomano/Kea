@@ -12,21 +12,16 @@ const std::vector<const char*> VALIDATION_LAYERS = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-// Vulkan debug extension list
-const std::vector<const char*> EXTENSIONS = {
-    vk::EXTDebugUtilsExtensionName
-};
+// Vulkan extension list
+const std::vector<const char*> EXTENSIONS = {};
 
 /**
  * @brief Create a Vulkan instance
  * 
- * @return vk::raii::Instance 
+ * @return vk::raii::Instance
  */
 vk::raii::Instance VulkanContext::createInstance() {
-	if(ENABLE_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
-		throw std::runtime_error("Validation layers requested, but not available!");
-	}
-
+	// Application info
 	vk::ApplicationInfo app_info{
 		.pApplicationName 	= "Kea",
 		.applicationVersion = 1,
@@ -35,17 +30,20 @@ vk::raii::Instance VulkanContext::createInstance() {
 		.apiVersion         = vk::ApiVersion10
 	};
 
+	// Extensions
+	auto extensions = getRequiredExtensions();
+
+	// Instance info
 	vk::InstanceCreateInfo instance_info{
-		.pApplicationInfo = &app_info
+		.pApplicationInfo = &app_info,
+		.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+		.ppEnabledExtensionNames = extensions.data()
 	};
 
+	// Enable validation layers if needed
 	if (ENABLE_VALIDATION_LAYERS) {
-		// Extensions
-		instance_info.setEnabledExtensionCount(1);
-		instance_info.setPEnabledExtensionNames(EXTENSIONS);
-
 		// Validation layers
-		instance_info.setEnabledLayerCount(1);
+		instance_info.setEnabledLayerCount(static_cast<uint32_t>(VALIDATION_LAYERS.size()));
 		instance_info.setPEnabledLayerNames(VALIDATION_LAYERS);
 
 		// Add debug messenger info for debug prints during instance creation
@@ -74,31 +72,6 @@ vk::DebugUtilsMessengerCreateInfoEXT VulkanContext::createDebugMessengerInfo() {
 }
 
 /**
- * @brief Check if the validation layers listed in VALIDATION_LAYERS are supported
- * 
- * @return true 
- * @return false 
- */
-bool VulkanContext::checkValidationLayerSupport() {
-	std::vector<vk::LayerProperties> available_layers = vk::enumerateInstanceLayerProperties();
-
-	for(const char* layer_name : VALIDATION_LAYERS) {
-		bool layer_found = false;
-
-		for(const auto &layer_properties : available_layers) {
-			if(strcmp(layer_name, layer_properties.layerName) == 0) {
-				layer_found = true;
-				break;
-			}
-		}
-
-		if (!layer_found) return false;
-	}
-
-	return true;
-}
-
-/**
  * @brief Create logical vulkan device
  * 
  * @return vk::raii::Device 
@@ -115,6 +88,7 @@ vk::raii::Device VulkanContext::createLogicalDevice() {
 		throw std::runtime_error("Couldn't find queue family that supports compute!");
 	}
 
+	// Device queue info
 	float q_prio = 1.0f;
 	vk::DeviceQueueCreateInfo dq_info{
 		.queueFamilyIndex = static_cast<uint32_t>(std::distance(qf_properties.begin(), prop_it)),
@@ -122,17 +96,33 @@ vk::raii::Device VulkanContext::createLogicalDevice() {
 		.pQueuePriorities = &q_prio
 	};
 
+	// Logical device info
 	vk::DeviceCreateInfo device_info{
 		.queueCreateInfoCount = 1,
 		.pQueueCreateInfos = &dq_info
 	};
 
+	// Enable validation layers if needed
 	if(ENABLE_VALIDATION_LAYERS) {
-		device_info.setEnabledLayerCount(1);
+		device_info.setEnabledLayerCount(static_cast<uint32_t>(VALIDATION_LAYERS.size()));
 		device_info.setPEnabledLayerNames(VALIDATION_LAYERS);
 	}
 
 	return physical_device.createDevice(device_info);
+}
+
+/**
+ * @brief Collect a list of required extensions
+ * 
+ * @return std::vector<const char*> 
+ */
+std::vector<const char*> VulkanContext::getRequiredExtensions() {
+	std::vector<const char*> extensions = EXTENSIONS;
+
+	// Enable debug utils extensions if validation layers are used
+    if (ENABLE_VALIDATION_LAYERS) extensions.push_back(vk::EXTDebugUtilsExtensionName);
+
+    return extensions;
 }
 
 /**

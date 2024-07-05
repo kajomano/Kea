@@ -15,10 +15,19 @@ class VulkanContext {
 
 	vk::raii::Instance createInstance();
 	vk::DebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo();
-	bool checkValidationLayerSupport();
-	// std::vector<const char*> getRequiredExtensions();
 	vk::raii::Device createLogicalDevice();
 
+	std::vector<const char*> getRequiredExtensions();
+
+	/**
+	 * @brief Callback function for debug prints
+	 * 
+	 * @param messageSeverity 
+	 * @param messageTypes 
+	 * @param pCallbackData 
+	 * @param pUserData 
+	 * @return VKAPI_ATTR 
+	 */
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
