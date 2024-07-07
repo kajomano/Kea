@@ -11,13 +11,16 @@ class VulkanContext {
 	vk::raii::Instance instance;
 	vk::raii::DebugUtilsMessengerEXT debug_messenger;
 	vk::raii::PhysicalDevice physical_device;
-	vk::raii::Device logical_device;
+	uint32_t qf_index;
+	vk::raii::Device logical_device;	
 
-	vk::raii::Instance createInstance();
-	vk::DebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo();
-	vk::raii::Device createLogicalDevice();
+	vk::raii::Instance createInstance() const;
+	vk::DebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo() const;
+	vk::raii::PhysicalDevice createPhysicalDevice() const;
+	vk::raii::Device createLogicalDevice() const;
 
-	std::vector<const char*> getRequiredExtensions();
+	uint32_t findQueueFamilyIndex() const;
+	std::vector<const char*> getRequiredExtensions() const;
 
 	/**
 	 * @brief Callback function for debug prints
@@ -29,9 +32,9 @@ class VulkanContext {
 	 * @return VKAPI_ATTR 
 	 */
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
-		VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+		VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
 		void* pUserData
 	) {
         std::cerr << "Vulkan validation layer: " << pCallbackData->pMessage << std::endl;
@@ -40,4 +43,8 @@ class VulkanContext {
 
 public:
 	VulkanContext();
+
+	uint32_t getQueueFamilyIndex() {return qf_index;};
+	vk::raii::PhysicalDevice& getPhysicalDevice() {return physical_device;};
+	vk::raii::Device& getLogicalDevice() {return logical_device;};
 };
