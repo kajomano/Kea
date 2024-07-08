@@ -2,10 +2,10 @@
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Define library
-add_library(raytracer)
+add_library(Raytracer)
 
 # Add sources
-target_sources(raytracer
+target_sources(Raytracer
   PUBLIC
   	vulkan_context.h
 	buffer.h
@@ -20,13 +20,34 @@ target_sources(raytracer
 )
 
 # Expose the headers for whoever links against this lib
-target_include_directories(raytracer PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(Raytracer PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 # Vulkan
 # Disable validation layers if in release mode
-target_compile_definitions(raytracer PRIVATE $<$<CONFIG:RELEASE>:DISABLE_VALIDATION_LAYERS>)
+target_compile_definitions(Raytracer PRIVATE $<$<CONFIG:RELEASE>:DISABLE_VALIDATION_LAYERS>)
 
 # Find package
 find_package(Vulkan REQUIRED)
-target_include_directories(raytracer PRIVATE ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(raytracer PRIVATE ${Vulkan_LIBRARIES})
+target_include_directories(Raytracer PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(Raytracer PRIVATE ${Vulkan_LIBRARIES})
+
+# Compile compute shaders (GLSL)
+set(SHADERS_IN_DIR ${CMAKE_CURRENT_LIST_DIR}/shaders)
+set(SHADERS_OUT_DIR ${CMAKE_BINARY_DIR}/shaders)
+
+file(GLOB SHADERS ${SHADERS_IN_DIR}/*.comp)
+file(MAKE_DIRECTORY ${SHADERS_OUT_DIR})
+
+foreach(SHADER ${SHADERS})
+	get_filename_component(SHADER_NAME ${SHADER} NAME_WLE)
+	set(SHADER_OUT_NAME ${SHADERS_OUT_DIR}/${SHADER_NAME}.spv)
+	list(APPEND SHADER_OUT_NAMES ${SHADER_OUT_NAME})
+	add_custom_command(
+		MAIN_DEPENDENCY ${SHADER}
+		OUTPUT ${SHADER_OUT_NAME}
+		COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} "-o" ${SHADER_OUT_NAME}
+		VERBATIM)
+endforeach()
+
+add_custom_target(BuildShaders DEPENDS ${SHADER_OUT_NAMES})
+add_dependencies(Raytracer BuildShaders)
