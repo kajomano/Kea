@@ -1,1 +1,1 @@
-from ..bindings.test import *
+from ..Bindings.test import *

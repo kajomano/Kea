@@ -168,4 +168,4 @@ VulkanContext::VulkanContext()
 	, physical_device{createPhysicalDevice()}
 	, qf_index{findQueueFamilyIndex()}
 	, logical_device{createLogicalDevice()}
-{};
+{}

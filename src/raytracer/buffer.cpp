@@ -1,7 +1,7 @@
 #include "buffer.h"
 
 /**
- * @brief Creae a buffer of specific size
+ * @brief Create a buffer of specific size
  * 
  * @param n_elements 
  * @param vulkan_context 
@@ -44,7 +44,7 @@ vk::raii::DeviceMemory HostBuffer::allocateDeviceMemory(
 
 	// Allocate memory and return
 	return logical_device.allocateMemory(mem_alloc_info);
-};
+}
 
 /**
  * @brief Find the memroy type index for the allocated memory
@@ -83,7 +83,7 @@ uint32_t HostBuffer::findMemoryTypeIndex(const std::shared_ptr<VulkanContext> &v
 
 	// Return the memory type id
 	return mem_type_id;
-};
+}
 
 /**
  * @brief Construct a new Host Buffer:: Host Buffer object

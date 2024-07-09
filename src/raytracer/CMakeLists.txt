@@ -7,14 +7,16 @@ add_library(Raytracer)
 # Add sources
 target_sources(Raytracer
   PUBLIC
+  	buffer.h
+	pipeline.h
   	vulkan_context.h
-	buffer.h
 
   	shader_test.h
 
   PRIVATE
-	vulkan_context.cpp
-	buffer.cpp
+  	buffer.cpp
+	pipeline.cpp
+	vulkan_context.cpp	
 
   	shader_test.cpp
 )

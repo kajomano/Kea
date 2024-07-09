@@ -34,6 +34,6 @@ void moduleTest(py::module &parent_m) {
  * @brief The main python module that collects all submodules
  * 
  */
-PYBIND11_MODULE(bindings, m) {
+PYBIND11_MODULE(Bindings, m) {
 	moduleTest(m);
 }
